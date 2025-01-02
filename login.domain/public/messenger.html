@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Secret Messenger</title>
+</head>
+<body>
+  <script>
+    // Register service worker first
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.ts')
+        .then(registration => {
+          console.log('Messenger: ServiceWorker registration successful:', registration.scope);
+          
+          // Wait for the service worker to be ready
+          return navigator.serviceWorker.ready;
+        })
+        .then(() => {
+          console.log('Messenger: ServiceWorker is ready');
+          
+          // Listen for messages from the app domain
+          window.addEventListener('message', (event) => {
+            console.log('Messenger: Received message from app:', event.data);
+            if (event.data.type === 'GET_SECRET') {
+              if (navigator.serviceWorker.controller) {
+                console.log('Messenger: Forwarding request to SW');
+                navigator.serviceWorker.controller.postMessage(event.data);
+              } else {
+                console.error('Messenger: No SW controller available');
+                window.parent.postMessage({
+                  type: 'ERROR',
+                  error: 'Service Worker not ready'
+                }, '*');
+              }
+            }
+          });
+
+          // Listen for messages from the service worker
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            console.log('Messenger: Received message from SW:', event.data);
+            // Forward the response to the parent window
+            window.parent.postMessage(event.data, '*');
+          });
+        })
+        .catch(error => {
+          console.error('Messenger: ServiceWorker registration failed:', error);
+          window.parent.postMessage({
+            type: 'ERROR',
+            error: 'Failed to register Service Worker: ' + error.message
+          }, '*');
+        });
+    } else {
+      console.error('Messenger: ServiceWorker not supported');
+      window.parent.postMessage({
+        type: 'ERROR',
+        error: 'Service Worker not supported'
+      }, '*');
+    }
+  </script>
+</body>
+</html> 

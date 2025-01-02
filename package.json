@@ -1,0 +1,16 @@
+{
+  "name": "cross-domain-demo",
+  "private": true,
+  "workspaces": [
+    "app.domain",
+    "login.domain"
+  ],
+  "scripts": {
+    "start:app": "yarn workspace app.domain dev",
+    "start:login": "yarn workspace login.domain dev",
+    "dev": "concurrently \"yarn start:app\" \"yarn start:login\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+} 

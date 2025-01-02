@@ -1,0 +1,13 @@
+{
+  "name": "login.domain",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite --port 5173"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+} 
