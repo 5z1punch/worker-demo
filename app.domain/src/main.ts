@@ -2,7 +2,7 @@
 let iframeReady = false;
 
 window.addEventListener('message', (event) => {
-  if (event.origin === 'http://127.0.0.1:5173') {
+  if (event.origin === 'http://localhost:5173') {
     console.log('App: Received message:', event.data);
     const data = event.data;
 
@@ -38,5 +38,5 @@ document.getElementById('getSecret')?.addEventListener('click', () => {
   console.log('App: Requesting secret');
   iframe.contentWindow.postMessage({ 
     type: 'GET_SECRET'
-  }, 'http://127.0.0.1:5173');
+  }, 'http://localhost:5173');
 }); 
