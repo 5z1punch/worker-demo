@@ -29,24 +29,29 @@ async function initDB() {
 }
 
 async function getSecret() {
-  const db = await initDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get('secretKey');
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readonly');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get('secretKey');
 
-    request.onsuccess = () => {
-      console.log('SW: Secret retrieved:', request.result);
-      resolve(request.result);
-      db.close();
-    };
+      request.onsuccess = () => {
+        console.log('SW: Secret retrieved:', request.result);
+        resolve(request.result);
+        db.close();
+      };
 
-    request.onerror = () => {
-      console.error('SW: Error getting secret:', request.error);
-      reject(request.error);
-      db.close();
-    };
-  });
+      request.onerror = () => {
+        console.error('SW: Error getting secret:', request.error);
+        reject(request.error);
+        db.close();
+      };
+    });
+  } catch (error) {
+    console.error('SW: Error initializing DB:', error);
+    throw error;
+  }
 }
 
 self.addEventListener('install', (event) => {
@@ -84,7 +89,7 @@ self.addEventListener('message', async (event) => {
       if (event.source) {
         event.source.postMessage({
           type: 'ERROR',
-          error: error.message
+          error: error.message || error
         });
       }
     }
