@@ -7,39 +7,17 @@
   <script>
     // Register service worker first
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.ts')
+      navigator.serviceWorker.register('/sw.ts', {
+        scope: '/',
+        type: 'module'
+      })
         .then(registration => {
           console.log('Messenger: ServiceWorker registration successful:', registration.scope);
-          
-          // Wait for the service worker to be ready
           return navigator.serviceWorker.ready;
         })
         .then(() => {
           console.log('Messenger: ServiceWorker is ready');
-          
-          // Listen for messages from the app domain
-          window.addEventListener('message', (event) => {
-            console.log('Messenger: Received message from app:', event.data);
-            if (event.data.type === 'GET_SECRET') {
-              if (navigator.serviceWorker.controller) {
-                console.log('Messenger: Forwarding request to SW');
-                navigator.serviceWorker.controller.postMessage(event.data);
-              } else {
-                console.error('Messenger: No SW controller available');
-                window.parent.postMessage({
-                  type: 'ERROR',
-                  error: 'Service Worker not ready'
-                }, '*');
-              }
-            }
-          });
-
-          // Listen for messages from the service worker
-          navigator.serviceWorker.addEventListener('message', (event) => {
-            console.log('Messenger: Received message from SW:', event.data);
-            // Forward the response to the parent window
-            window.parent.postMessage(event.data, '*');
-          });
+          window.parent.postMessage({ type: 'READY' }, '*');
         })
         .catch(error => {
           console.error('Messenger: ServiceWorker registration failed:', error);
@@ -48,6 +26,36 @@
             error: 'Failed to register Service Worker: ' + error.message
           }, '*');
         });
+
+      // Listen for messages from the app domain
+      window.addEventListener('message', (event) => {
+        if (event.data.type === 'GET_SECRET') {
+          // Try to get the secret from localStorage first
+          const secret = localStorage.getItem('secretKey');
+          if (secret) {
+            window.parent.postMessage({
+              type: 'SECRET_VALUE',
+              secret: secret
+            }, '*');
+            return;
+          }
+
+          // If no secret in localStorage, try service worker
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage(event.data);
+          } else {
+            window.parent.postMessage({
+              type: 'ERROR',
+              error: 'Service Worker not ready'
+            }, '*');
+          }
+        }
+      });
+
+      // Listen for messages from the service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        window.parent.postMessage(event.data, '*');
+      });
     } else {
       console.error('Messenger: ServiceWorker not supported');
       window.parent.postMessage({

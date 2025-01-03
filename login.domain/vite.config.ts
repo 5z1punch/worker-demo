@@ -14,7 +14,9 @@ export default defineConfig({
       'Service-Worker-Allowed': '/',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept'
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp'
     }
   },
   publicDir: 'public'

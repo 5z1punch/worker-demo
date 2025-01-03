@@ -1,47 +1,50 @@
-document.getElementById('getSecret')?.addEventListener('click', async () => {
-  try {
-    console.log('App: Creating iframe');
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = 'http://localhost:5173/messenger.html';
-    
-    document.body.appendChild(iframe);
+// Wait for iframe to be ready
+let iframeReady = false;
 
-    // Wait for the iframe to load
-    await new Promise<void>((resolve) => {
-      iframe.onload = () => {
-        console.log('App: Iframe loaded');
-        resolve();
-      };
-    });
+window.addEventListener('message', (event) => {
+  if (event.origin === 'http://localhost:5173') {
+    console.log('App: Received message:', event.data);
+    const data = event.data;
 
-    // Set up message listener
-    window.addEventListener('message', (event) => {
-      console.log('App: Received message:', event.data);
-      if (event.origin === 'http://localhost:5173') {
-        const data = event.data;
-        const resultDiv = document.getElementById('result');
-        if (resultDiv) {
-          if (data.type === 'SECRET_VALUE') {
-            resultDiv.textContent = `Secret from login domain: ${data.secret}`;
-          } else if (data.type === 'ERROR') {
-            resultDiv.textContent = `Error: ${data.error}`;
-          }
-        }
-        // Clean up
-        document.body.removeChild(iframe);
-      }
-    }, { once: true });
-
-    console.log('App: Sending message to iframe');
-    // Make sure the iframe's contentWindow is available
-    if (iframe.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'GET_SECRET' }, 'http://localhost:5173');
-    } else {
-      throw new Error('Iframe contentWindow not available');
+    if (data.type === 'READY') {
+      iframeReady = true;
+      return;
     }
-  } catch (error) {
-    console.error('App: Failed to get secret:', error);
-    alert('Failed to get secret: ' + (error as Error).message);
+
+    if (data.type === 'STORAGE_ACCESS_REQUIRED') {
+      const resultDiv = document.getElementById('result');
+      if (resultDiv) {
+        resultDiv.textContent = 'Please click the button again to allow storage access';
+      }
+      return;
+    }
+
+    const resultDiv = document.getElementById('result');
+    if (resultDiv) {
+      if (data.type === 'SECRET_VALUE') {
+        resultDiv.textContent = `Secret from login domain: ${data.secret}`;
+      } else if (data.type === 'ERROR') {
+        resultDiv.textContent = `Error: ${data.error}`;
+      }
+    }
   }
+});
+
+document.getElementById('getSecret')?.addEventListener('click', () => {
+  if (!iframeReady) {
+    console.error('Iframe not ready yet');
+    return;
+  }
+
+  const iframe = document.getElementById('secretFrame') as HTMLIFrameElement;
+  if (!iframe.contentWindow) {
+    console.error('No iframe content window available');
+    return;
+  }
+  
+  // Send request to iframe
+  console.log('App: Requesting secret');
+  iframe.contentWindow.postMessage({ 
+    type: 'GET_SECRET'
+  }, 'http://localhost:5173');
 }); 
