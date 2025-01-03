@@ -11,6 +11,14 @@ window.addEventListener('message', (event) => {
       return;
     }
 
+    if (data.type === 'STORAGE_ACCESS_REQUIRED') {
+      const resultDiv = document.getElementById('result');
+      if (resultDiv) {
+        resultDiv.textContent = 'Please click the button again to allow storage access';
+      }
+      return;
+    }
+
     const resultDiv = document.getElementById('result');
     if (resultDiv) {
       if (data.type === 'SECRET_VALUE') {

@@ -10,7 +10,9 @@
     <iframe 
       id="secretFrame"
       src="http://localhost:5173/secret.html"
-      sandbox="allow-scripts allow-same-origin allow-storage-access-by-user-activation"
+      sandbox="allow-scripts allow-same-origin allow-storage-access-by-user-activation allow-storage-access"
+      allow="cross-origin-isolated"
+      credentialless
     ></iframe>
     <script type="module" src="/src/main.ts"></script>
   </body>
